@@ -61,12 +61,18 @@ static inline int lit_val(lit l) {
 typedef struct Clause {
 	lit* lits;
 	int size;
-	int level_sat;  //in which level this clause is satisfied
+	int level_sat;
 }clause;
 
-static inline int clause_size(clause * c) { return c->size; }
-static inline int clause_level(clause * c) { return c->level_sat; };
-static inline lit* clause_begin(clause * c) { return c->lits; }
+static inline int clause_size(clause * c){ 
+	return c->size; 
+}
+static inline int clause_level(clause * c) { 
+	return c->level_sat; 
+};
+static inline lit* clause_begin(clause * c) {
+	return c->lits; 
+}
 
 static clause* new_clause(lit * begin, lit * end) {
 	clause* c;
@@ -144,15 +150,18 @@ typedef struct Solver {
 	int numofvar; // num of var
 	int numofclause;  //num of clause
 	int cap;  // = numofvar * 2 + 1
+
 	vecp clauses;  //the vector of clause
 	int tail; //index of the end of clauses
+	
 	int cur_level; //level in the tree
-	bool satisifable;
-	bool* desicions;
-	lit* level_choice;  // in level x the choice is level_choice[x]
-	lbool* assigns;
-	int* levels; // level that each lit was assigned
+	bool satisifable; //true = satisifable
+	bool* mark;  //mark the unit literal true or false
+	lit* level_v;  // in level x choose level[x] to propagate
+	lbool* valuation;  //the valuation of each literal
+	int* levels; // which level that lit was assigned
 	int* counts; //number of each literal
+
 }solver;
 
 

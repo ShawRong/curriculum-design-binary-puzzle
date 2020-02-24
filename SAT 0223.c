@@ -25,10 +25,10 @@ static inline solver* solver_new() {
 	s->cur_level = -1;
 
 	vecp_new(&s->clauses);
-	s->level_choice = NULL;
-	s->assigns = NULL;
+	s->level_v = NULL;
+	s->valuation = NULL;
 	s->counts = NULL;
-	s->desicions = NULL;
+	s->mark = NULL;
 	s->levels = NULL;
 
 	return s;
@@ -36,17 +36,17 @@ static inline solver* solver_new() {
 
 static inline void solver_set(solver* s) {   //set the member to 0 or l_Udef
 	s->cap = s->numofvar * 2 + 1;
-	s->assigns = (lbool*)realloc(s->assigns, sizeof(lbool) * s->cap);
-	s->level_choice = (lit*)realloc(s->level_choice, sizeof(lit) * s->cap);
+	s->valuation = (lbool*)realloc(s->valuation, sizeof(lbool) * s->cap);
+	s->level_v = (lit*)realloc(s->level_v, sizeof(lit) * s->cap);
 	s->counts = (int*)realloc(s->counts, sizeof(int) * s->cap);
-	s->desicions = (bool*)realloc(s->desicions, sizeof(bool) * s->cap);
+	s->mark = (bool*)realloc(s->mark, sizeof(bool) * s->cap);
 	s->levels = (int*)realloc(s->levels, sizeof(int) * s->cap);
 
 	int i = 0;
 	for (i = 0; i < s->cap; i++) {
-		s->assigns[i] = l_Undef;
-		s->level_choice[i] = 0;
-		s->desicions[i] = false;
+		s->valuation[i] = l_Undef;
+		s->level_v[i] = 0;
+		s->mark[i] = false;
 		s->levels[i] = -1;
 		s->counts[i] = 0;
 	}
@@ -57,41 +57,35 @@ static inline void solver_addclause(solver* s, clause* c) {
 }
 
 static inline void destroy_solver(solver* s) {
-	free(s->assigns);
-	free(s->level_choice);
+	free(s->valuation);
+	free(s->level_v);
 	vecp_delete(&s->clauses);
 	free(s);
 }
 //***************************************************************************************************************
 
-bool update_counts(solver* s)
-{
+bool counts(solver* s) {
 	int i, j;
 	clause* c;
-	
 	for (i = 1; i < s->cap; i++) {
 		s->counts[i] = 0;
 	}
-
 	for (i = 0; i < s->tail; i++) {
 		c = vecp_begin(&s->clauses)[i];
 		for (j = 0; j < clause_size(c); j++) {
-			// A true literal should not be in the working set of clauses!
-			if (s->assigns[c->lits[j]] == l_True) return false;
-			else if (s->assigns[c->lits[j]] == l_Undef) // Only count if not False
+			if (s->valuation[c->lits[j]] == l_True) return false;
+			else if (s->valuation[c->lits[j]] == l_Undef)
 				s->counts[c->lits[j]]++;
 		}
 	}
 	return true;
 }
 
-lit make_decision(solver* s)
-{
+lit choosev(solver* s) {
 	int i, maxval;
 	lit maxlit;
-	if (!update_counts(s))
-		fprintf(stderr, "ERROR! Failed to update literal counts at level %d\n", s->cur_level),
-		exit(1);
+	if (!counts(s))
+		printf("Failed to update\n"),exit(1);
 	maxval = -1;
 	maxlit = -1;
 	for (i = 1; i < s->cap; i++) {
@@ -100,15 +94,12 @@ lit make_decision(solver* s)
 			maxlit = i;
 		}
 	}
-	if (maxval == 0 || s->assigns[maxlit] == l_False)
-		fprintf(stderr, "ERROR! make_decision failed to find a lit that exists and isn't false!\n"),
-		exit(1);
-
+	if (maxval == 0 || s->valuation[maxlit] == l_False)
+		printf(stderr, "Failed to find a lit that exists and isn't false!\n"),exit(1);
 	return maxlit;
-
 }
 
-bool propagate_decision(solver* s, lit decision, bool new_level) {
+bool propagate_v(solver* s, lit v, bool new_level) {
 	bool no_conflict = true;
 	int i, j, false_count;
 	clause* c;
@@ -116,21 +107,21 @@ bool propagate_decision(solver* s, lit decision, bool new_level) {
 
 	if (new_level) {
 		s->cur_level++;
-		s->level_choice[s->cur_level] = decision;
-		s->desicions[decision] = true;  // only change 'decisions' on level decisions.
+		s->level_v[s->cur_level] = v;
+		s->mark[v] = true;  // only change 'decisions' on level decisions.
 	}
-	s->levels[decision] = s->cur_level;
-	s->assigns[decision] = l_True;
-	s->assigns[lit_neg(decision)] = l_False;
+	s->levels[v] = s->cur_level;
+	s->valuation[v] = l_True;
+	s->valuation[lit_neg(v)] = l_False;
 
 	for (i = 0; i < s->tail; i++) {
 		c = vecp_begin(&s->clauses)[i];
 		for (j = 0; j < clause_size(c); j++) {
 			if (j == 0) false_count = 0;
-			if (s->assigns[c->lits[j]] == l_False) {
+			if (s->valuation[c->lits[j]] == l_False) {
 				false_count++;
 			}
-			else if (s->assigns[c->lits[j]] == l_True) {
+			else if (s->valuation[c->lits[j]] == l_True) {
 				c->level_sat = s->cur_level;
 				if (s->tail == 1) {
 					s->tail--;
@@ -150,17 +141,16 @@ bool propagate_decision(solver* s, lit decision, bool new_level) {
 	return no_conflict;
 }
 
+
 // returns the level_choice of the level backtracked to
-
-
 lit backtrack_once(solver* s) {
 	int i;
 	clause* c;
 
 	for (i = 1; i < s->cap; i++) {
 		if (s->levels[i] == s->cur_level) {
-			s->assigns[i] = l_Undef;
-			s->assigns[lit_neg(i)] = l_Undef;
+			s->valuation[i] = l_Undef;
+			s->valuation[lit_neg(i)] = l_Undef;
 			s->levels[i] = -1;
 		}
 	}
@@ -173,19 +163,19 @@ lit backtrack_once(solver* s) {
 		else break;
 	}
 
-	return s->level_choice[s->cur_level--];
+	return s->level_v[s->cur_level--];
 
 }
 
 // returns true if backtrack worked, false if top of tree is hit (UNSATISFIABLE)
 bool backtrack(solver* s, lit* decision) {
 	// CONFLICT FOUND
-	if (s->cur_level == 0 && s->desicions[lit_neg(s->level_choice[0])] == true) return false; //UNSATISFIABLE (boundary case)
+	if (s->cur_level == 0 && s->mark[lit_neg(s->level_v[0])] == true) return false; //UNSATISFIABLE (boundary case)
 	lit lev_choice = backtrack_once(s);
-	while (s->desicions[lit_neg(lev_choice)] == true && s->desicions[lev_choice] == true) {
+	while (s->mark[lit_neg(lev_choice)] == true && s->mark[lev_choice] == true) {
 		if (s->cur_level + 1 == 0) { return false; } //UNSATISFIABLE
-		s->desicions[lit_neg(lev_choice)] = false;
-		s->desicions[lev_choice] = false;
+		s->mark[lit_neg(lev_choice)] = false;
+		s->mark[lev_choice] = false;
 		lev_choice = backtrack_once(s);
 	}
 	*decision = lit_neg(lev_choice);
@@ -205,7 +195,7 @@ bool find_unit(solver* s, lit* unit_lit) {
 		for (j = 0; j < clause_size(c); j++) {
 			if (j == 0) false_count = 0;
 			assert(s->assigns[c->lits[j]] != l_True);
-			if (s->assigns[c->lits[j]] == l_False) false_count++;
+			if (s->valuation[c->lits[j]] == l_False) false_count++;
 			else *unit_lit = c->lits[j]; // If this is a unit clause, this will be the unit lit.
 			if (j == clause_size(c) - 1 && false_count == clause_size(c) - 1) {
 				return true; //UNIT CLAUSE!
@@ -219,7 +209,7 @@ bool find_unit(solver* s, lit* unit_lit) {
 bool propagate_units(solver* s) {
 	lit unit_lit;
 	while (find_unit(s, &unit_lit)) {
-		if (!propagate_decision(s, unit_lit, false)) return false; // CONFLICT
+		if (!propagate_v(s, unit_lit, false)) return false; // CONFLICT
 		if (s->tail == 0) return true; // SATISFIED
 	}
 	return true;
@@ -231,9 +221,9 @@ bool solver_solve(solver* s) {
 
 	while (true) {
 		// pick a variable to decide on (based on counts)
-		if (!forced) { decision = make_decision(s); }
+		if (!forced) { decision = choosev(s); }
 		else forced = false;
-		if (!propagate_decision(s, decision, true)) {
+		if (!propagate_v(s, decision, true)) {
 			// CONFLICT
 			if (!backtrack(s, &decision)) return false;//UNSATISFIABLE
 			else { //Backtrack worked, decision must be forced
@@ -317,7 +307,7 @@ void writeSolution(solver* s,const char* filename) {
 	int i; lit l;
 	for (i = 1; i < s->numofvar + 1; i++) {
 		l = tolit(i);
-		fprintf(f, "%d: %d\n", i, s->assigns[l] < 0 ? -1 : 1);
+		fprintf(f, "%d: %d\n", i, s->valuation[l] < 0 ? -1 : 1);
 	}
 
 	fclose(f);
