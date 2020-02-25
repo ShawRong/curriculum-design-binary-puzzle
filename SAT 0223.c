@@ -4,9 +4,11 @@
 #include "struct.h"
 #include "dpll.h"
 #include "FileIO.h"
+#include "suduko.h"
 
 
 int main() {
+	/*
 	solver* s = solver_new();
 	char filename1[100];
 	char filename2[100];
@@ -29,7 +31,21 @@ int main() {
 	printf("%.100lf\n",s->time);
 
 	writeSolution(s, filename2);
-
+	*/
+	//suduko
+	suduko* su = new_suduko();
+	read_suduko(su, "suduko.txt");
+	print_suduko(su);
+	vecp clauses;
+	vecp_new(&clauses);
+	sudukotosat(su,&clauses);
+	int i = 0;
+	for (i = 0; i < vecp_size(&clauses); i++) {
+		clause* c = vecp_begin(&clauses)[i];
+		print_clause_suduko(c,su);
+		printf("\n");
+	}
+	destroy_suduko(su);
 	return 0;
 }
 

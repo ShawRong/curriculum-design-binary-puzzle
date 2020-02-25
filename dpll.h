@@ -698,7 +698,7 @@ void print_solver(solver* s) {
 void print_clause(clause* c) {
 	int i;
 	for (i = 0; i < c->size; i++) {
-		printf("%d ", c->lits[i]);
+		printf("%d ", lit_val(c->lits[i]));
 	}
 }
 
