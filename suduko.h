@@ -297,6 +297,83 @@ void rule_2(suduko* su, vecp* clauses) {
 	destroy_INFO(info);
 }
 
+int tosequential(int x,int y,int degree) {
+	int res;
+	res = (-1 * (x * x) + (2 * degree - 1) * x + 2 * y - 2 * degree)/2;
+	return res;
+}
+void breakup(int num,int* remain) {
+	int i = 0;
+	while (num) {
+		remain[i] = num % 10;
+		num /= 10;
+		i++;
+	}
+}
+
+lit additional_bool(int input, int degree) {
+	bool row = true; int remain[5]; int order_3; int order_2; int order_1;
+	int v; int i; lit l;
+	//initial
+	for (i = 0; i < 5; i++) {
+		remain[i] = 0;
+	}
+
+	breakup(input,remain);
+	if (remain[3] == 0) {
+		if (remain[2] == 2) row = false;
+		order_3 = tosequential(remain[1], remain[0],degree);
+		order_2 = degree + 1;
+		order_1 = 1;
+	} else if(remain[4] == 0){
+		if (remain[3] == 2) row = false;
+		order_3 = tosequential(remain[2], remain[1], degree);
+		order_2 = remain[0];
+		order_1 = 3;
+	} else {
+		if (remain[5] == 2) row = false;
+		order_3 = tosequential(remain[3], remain[2], degree);
+		order_2 = remain[1];
+		if (remain[0] == 1) {
+			order_1 = 1;
+		}else if (remain[0] == 0) {
+			order_1 = 2;
+		}
+	}
+	v = order_1 + (order_2 - 1) * 3 + (order_3 - 1) * (3 * degree + 1);
+	if (!row) {
+		int max = (3 * degree + 1) * (tosequential(degree - 1, degree, degree));
+		v += max;
+	}
+	v += degree * degree;
+	l = tolit(v);
+	return l;
+}
+/*=============================================================
+example: 1 5 8 1 1
+order_1: the unit's place
+		1--> first ->1
+		0--> second ->2
+		_--> third ->3
+		if _ _ -> 1
+order_2: the ten's place
+		degree--> biggest ->d
+		1--> smallest ->1
+		_ --> d+1
+order_3: the hundred's place and the thousand's position
+		using tosqential function to order
+		1,2 --> samllest
+		d-1,d --> biggest
+
+the order = order_1 + (order_2-1)*3 + (order_3-1)*(3*d+1)
+
+==============================================================*/
+
+//the biggest degree that system supported is 8
+void rule_3(suduko* su,vecp* clasues) {
+	
+}
+
 
 void sudukotosat(suduko* su,vecp* clauses) {
 	// new unit clause

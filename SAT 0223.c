@@ -33,6 +33,7 @@ int main() {
 	writeSolution(s, filename2);
 	*/
 	//suduko
+	/*
 	suduko* su = new_suduko();
 	read_suduko(su, "suduko.txt");
 	print_suduko(su);
@@ -45,7 +46,14 @@ int main() {
 		print_clause_suduko(c,su);
 		printf("\n");
 	}
-	destroy_suduko(su);
+	destroy_suduko(su);*/
+	lit l1 = additional_bool(278  ,8);
+	lit l2 = additional_bool(15710,8);
+	lit l3 = additional_bool(1571 ,8);
+	printf("%d\n", tosequential(7, 8, 8));
+	printf("278  :%d\n", lit_val(l1));
+	printf("15710:%d\n", lit_val(l2));
+	printf("1571 :%d\n", lit_val(l3));
 	return 0;
 }
 
