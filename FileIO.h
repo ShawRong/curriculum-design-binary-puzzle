@@ -48,6 +48,26 @@ void readClauseSet(solver* s, const char* filename) {
 	fclose(fp);
 }
 
+void writeCnf(solver* s, const char* filename) {
+
+	FILE* f = fopen(filename, "w");
+	if (f == NULL) {
+		printf("Error opening file!\n");
+		exit(1);
+	}
+
+	fprintf(f, "p cnf %d %d\n", s->numofvar, s->numofclause);
+	int i; int j; clause* c;
+	for (i = 0; i < vecp_size(&s->clauses); i++) {
+		c = vecp_begin(&s->clauses)[i];
+		for (j = 0; j < c->size; j++) {
+			fprintf(f, "%d ", c->lits[j]);
+		}
+		fprintf(f,"\n");
+	}
+	fclose(f);
+}
+
 void writeSolution(solver * s, const char* filename) {
 	
 	FILE* f = fopen(filename, "w");

@@ -27,6 +27,18 @@ void vtoxy(int* x,int* y,int degree,int v) {
 	*x = (v - *y) / degree + 1;
 }
 
+void special_restoxy(int* x, int* y, int degree, int res) {
+	int i, j;
+	for (i = degree - 1; i > 0; i--) {
+		j = res - (i - 1) * (2 * degree - i) / 2;
+		if (j > 0) {
+			*y = j + i;
+			*x = i;
+			return;
+		}
+	}
+}
+
 typedef struct suduko_t {
 	int degree;
 	char** space;
@@ -107,21 +119,7 @@ void print_suduko(suduko* s) {
 	}
 }
 
-void print_clause_suduko(clause* c,suduko* s) {
-	int i; int x; int y; int v;
-	for (i = 0; i < c->size; i++) {
-		v = lit_val(c->lits[i]);
-		vtoxy(&x, &y, s->degree, abs(v));
-		if (v < 0) {
-			printf("-%d%d ", x, y);
-		} else {
-			printf("%d%d ", x, y);
-		}
-	}
-	printf("\n");
-}
-
-lit build_literal(int i,int j,int degree,bool pos) {
+lit build_literal(int i,int j,int degree,bool pos) {  
 	int v; lit l;
 	v = xytov(toi(i), toi(j),degree);
 	if (!pos) {
@@ -311,6 +309,31 @@ void breakup(int num,int* remain) {
 	}
 }
 
+int arraytonum_5(int* a) {
+	int i = 4;
+	int num = 0;
+	while (a[i] != -1 && i >= 0) {
+		num *= 10;
+		num += a[i];
+		i--;
+	}
+	return num;
+}
+
+int new_addition(int a,int b,int c,int d,int e) {  //no exist = -1
+	int array[5]; int index; int ans;
+	for (index = 0; index < 5; index++) {
+		array[index] = -1;
+	}
+	array[4] = a;
+	array[3] = b ;
+	array[2] = c;
+	array[1] = d;
+	array[0] = e;
+	ans = arraytonum_5(array);
+	return ans;
+}
+
 lit additional_bool(int input, int degree) {
 	bool row = true; int remain[5]; int order_3; int order_2; int order_1;
 	int v; int i; lit l;
@@ -331,7 +354,7 @@ lit additional_bool(int input, int degree) {
 		order_2 = remain[0];
 		order_1 = 3;
 	} else {
-		if (remain[5] == 2) row = false;
+		if (remain[4] == 2) row = false;
 		order_3 = tosequential(remain[3], remain[2], degree);
 		order_2 = remain[1];
 		if (remain[0] == 1) {
@@ -370,17 +393,245 @@ the order = order_1 + (order_2-1)*3 + (order_3-1)*(3*d+1)
 ==============================================================*/
 
 //the biggest degree that system supported is 8
-void rule_3(suduko* su,vecp* clasues) {
-	
+
+void addclauses_inrule3(suduko* su, vecp* clauses, int row,int i,int j,int t,int m) { // m = 0 or 1 //row = 1 or 2
+	vecl lits; lit l; clause* c;
+	//15711-1
+	vecl_new(&lits);
+	l = build_literal(i, t, su->degree, true);
+	if (m == 0) l = lit_neg(l);
+	vecl_push(&lits, l);
+	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, m), su->degree);
+	l = lit_neg(l);
+	vecl_push(&lits, l);
+	c = new_clause(vecl_begin(&lits), vecl_begin(&lits) + vecl_size(&lits));
+	vecp_push(clauses, c);
+	vecl_delete(&lits);
+	//15711-2
+	vecl_new(&lits);
+	l = build_literal(j, t, su->degree, true);
+	if (m == 0) l = lit_neg(l);
+	vecl_push(&lits, l);
+	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, m), su->degree);
+	l = lit_neg(l);
+	vecl_push(&lits, l);
+	c = new_clause(vecl_begin(&lits), vecl_begin(&lits) + vecl_size(&lits));
+	vecp_push(clauses, c);
+	vecl_delete(&lits);
+	//15711-3
+	vecl_new(&lits);
+	l = build_literal(i, t, su->degree, true);
+	if(m == 1) l = lit_neg(l);
+	vecl_push(&lits, l);
+	l = build_literal(j, t, su->degree, true);
+	if (m == 1) l = lit_neg(l);
+	vecl_push(&lits, l);
+	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, m), su->degree);
+	vecl_push(&lits, l);
+	c = new_clause(vecl_begin(&lits), vecl_begin(&lits) + vecl_size(&lits));
+	vecp_push(clauses, c);
+	vecl_delete(&lits);
+}
+void addclauses_inrule3_(suduko* su,vecp* clauses, int row,int i,int j,int t) {
+	lit l; vecl lits; clause* c;
+	//1
+	vecl_new(&lits);
+	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, 1), su->degree);
+	l = lit_neg(l);
+	vecl_push(&lits, l);
+	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, -1), su->degree);
+	vecl_push(&lits, l);
+	c = new_clause(vecl_begin(&lits), vecl_begin(&lits) + vecl_size(&lits));
+	vecp_push(clauses, c);
+	vecl_delete(&lits);
+	//2
+	vecl_new(&lits);
+	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, 0), su->degree);
+	l = lit_neg(l);
+	vecl_push(&lits, l);
+	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, -1), su->degree);
+	vecl_push(&lits, l);
+	c = new_clause(vecl_begin(&lits), vecl_begin(&lits) + vecl_size(&lits));
+	vecp_push(clauses, c);
+	vecl_delete(&lits);
+	//3
+	vecl_new(&lits);
+	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, 1), su->degree);
+	vecl_push(&lits, l);
+	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, 0), su->degree);
+	vecl_push(&lits, l);
+	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, -1), su->degree);
+	l = lit_neg(l);
+	vecl_push(&lits, l);
+	c = new_clause(vecl_begin(&lits), vecl_begin(&lits) + vecl_size(&lits));
+	vecp_push(clauses, c);
+	vecl_delete(&lits);
+}
+
+void addclauses_inrule3__(suduko* su,vecp* clauses, int row,int i,int j) {
+	vecl lits; int index = 0; lit save = additional_bool(new_addition(row, i + 1, j + 1, -1, -1), su->degree);
+	lit temp; clause* c;
+	//1
+	vecl_new(&lits);
+	for (index = 0; index < su->degree; index++) {
+		temp = additional_bool(new_addition(row, i + 1, j + 1, index + 1, -1),su->degree);
+		temp = lit_neg(temp);
+		vecl_push(&lits,temp);
+	}
+	temp = lit_neg(save);
+	vecl_push(&lits, temp);
+	c = new_clause(vecl_begin(&lits), vecl_begin(&lits) + vecl_size(&lits));
+	vecp_push(clauses, c);
+	vecl_delete(&lits);
+	//else
+	for (index = 0; index < su->degree; index++) {
+		vecl_new(&lits);
+		temp = additional_bool(new_addition(row, i + 1, j + 1, index + 1, -1),su->degree);
+		vecl_push(&lits, temp);
+		vecl_push(&lits, save);
+		c = new_clause(vecl_begin(&lits), vecl_begin(&lits) + vecl_size(&lits));
+		vecp_push(clauses,c);
+		vecl_delete(&lits);
+	}
+}
+
+void rule_3(suduko* su,vecp* clauses) {
+	int i; int j; int t; clause* c;
+	//row
+	for (i = 0; i < su->degree; i++) {
+		for (j = i + 1; j < su->degree; j++) {
+			for (t = 0; t < su->degree; t++) {
+				//15711
+				addclauses_inrule3(su, clauses,1, i, j, t, 1);
+				addclauses_inrule3(su, clauses,1, i, j, t, 0);
+				addclauses_inrule3_(su, clauses,1, i, j, t);
+			}
+			addclauses_inrule3__(su, clauses, 1, i, j);
+		}
+	}
+	//col
+	for (i = 0; i < su->degree; i++) {
+		for (j = i + 1; j < su->degree; j++) {
+			for (t = 0; t < su->degree; t++) {
+				//25711
+				addclauses_inrule3(su, clauses, 2, i, j, t, 1);
+				addclauses_inrule3(su, clauses, 2, i, j, t, 0);
+				addclauses_inrule3_(su, clauses, 2, i, j, t);
+			}
+			addclauses_inrule3__(su, clauses, 2, i, j);
+		}
+	}
 }
 
 
-void sudukotosat(suduko* su,vecp* clauses) {
+void sudukotosat(suduko* su,solver* s) {
+	s->numofvar = lit_val(additional_bool(new_addition(2,su->degree-1,su->degree,-1,-1), su->degree));
+	
 	// new unit clause
-	new_unitclause(su, clauses);
+	new_unitclause(su, &s->clauses);
 	//rules
-	rule_1(su, clauses);
-	rule_2(su, clauses);
+	rule_1(su, &s->clauses);
+	rule_2(su, &s->clauses);
+	rule_3(su, &s->clauses);
+	s->numofclause = vecp_size(&s->clauses);
+}
+
+
+
+int trans_fromorder(int order_1,int order_2,int order_3,bool row,suduko* su) {
+	int array[5]; int i;
+	for (i = 0; i < 5; i++) {
+		array[i] = -1;
+	}
+	if (row) {
+		array[4] = 1;
+	} else {
+		array[4] = 2;
+	}
+	int x; int y;
+	special_restoxy(&x,&y,su->degree,order_3);
+	array[3] = x; array[2] = y;
+	if (order_2 == 0 /*su->degree + 1*/) {
+		return arraytonum_5(array);
+	} else {
+		array[1] = order_2;
+	}
+	if (order_1 == 1) {
+		array[0] = 1;
+	} else if(order_1 == 2) {
+		array[0] = 0;
+	} else if (order_1 == 0) {
+		return arraytonum_5(array);
+	}
+	return arraytonum_5(array);
+}
+
+/*=============================================================
+example: 1 5 8 1 1
+order_1: the unit's place
+		1--> first ->1
+		0--> second ->2
+		_--> third ->3
+		if _ _ -> 1
+order_2: the ten's place
+		degree--> biggest ->d
+		1--> smallest ->1
+		_ --> d+1
+order_3: the hundred's place and the thousand's position
+		using tosqential function to order
+		1,2 --> samllest
+		d-1,d --> biggest
+
+the order = order_1 + (order_2-1)*3 + (order_3-1)*(3*d+1)
+
+==============================================================*/
+
+void print_clause_suduko(clause* c, suduko* s) {
+	int i; int x; int y; int v;
+	for (i = 0; i < c->size; i++) {
+		v = lit_val(c->lits[i]);
+		bool row;
+		if (abs(v) > s->degree*s->degree) {
+			if (v < 0) {
+				v = -1 * v;
+				printf("-");
+			}
+			v -= s->degree * s->degree; 
+			int max = (3 * s->degree + 1) * (tosequential(s->degree - 1, s->degree, s->degree));
+			if (v > max) {
+				row = false;
+				v -= max;
+			} else {
+				row = true;
+			}
+			int order_1; int order_2; int order_3;
+			if (v % (3 * s->degree + 1) == 0) {
+				order_3 = v / (3 * s->degree + 1) + 1 -1;
+			} else {
+				order_3 = v / (3 * s->degree + 1) + 1;
+			}
+			v = v % (3 * s->degree + 1);
+			if (v % 3 == 0) {
+				order_2 = v / 3 + 1 -1;
+			} else {
+				order_2 = v / 3 + 1;
+			}
+			v = v % 3;
+			order_1 = v;
+			v = trans_fromorder(order_1,order_2,order_3,row,s);
+			printf("%d ", v);
+		} else {
+			vtoxy(&x, &y, s->degree, abs(v));
+			if (v < 0) {
+				printf("-%d%d ", x, y);
+			}
+			else {
+				printf("%d%d ", x, y);
+			}
+		}
+		
+	}
+	printf("\n");
 }
 
 /*==========================================================

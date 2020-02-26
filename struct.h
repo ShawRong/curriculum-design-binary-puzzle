@@ -158,8 +158,7 @@ static inline void vecl_new(vecl *v) {
 static inline void   vecl_delete(vecl* v) { free(v->ptr); }
 static inline lit* vecl_begin(vecl* v) { return v->ptr; }
 static inline int    vecl_size(vecl* v) { return v->size; }
-static inline void   vecl_push(vecl* v, lit e)
-{
+static inline void   vecl_push(vecl* v, lit e){
 	if (v->size == v->cap) {
 		int newsize = v->cap * 2 + 1;
 		v->ptr = (lit*)realloc(v->ptr, sizeof(lit) * newsize);
@@ -189,8 +188,8 @@ typedef struct Solver {
 	
 	bool* mark;  //mark the literal which was used to simplify the cnf true or false
 
-	lit* v_level;  //  return the literal l in level i was choosed
-	int* level_v; // return the level i where the literal l was choosed
+	lit* v_level;  //  return the literal l in level i was chose
+	int* level_v; // return the level i where the literal l was chose
 	
 	lbool* valuation;  //the valuation of each literal
 	

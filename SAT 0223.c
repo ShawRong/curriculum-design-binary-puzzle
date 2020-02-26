@@ -33,27 +33,31 @@ int main() {
 	writeSolution(s, filename2);
 	*/
 	//suduko
-	/*
+	solver* s = solver_new();
+	solver_set(s);
 	suduko* su = new_suduko();
 	read_suduko(su, "suduko.txt");
 	print_suduko(su);
-	vecp clauses;
-	vecp_new(&clauses);
-	sudukotosat(su,&clauses);
+	sudukotosat(su,s);
 	int i = 0;
-	for (i = 0; i < vecp_size(&clauses); i++) {
-		clause* c = vecp_begin(&clauses)[i];
+	for (i = 0; i < vecp_size(&s->clauses); i++) {
+		clause* c = vecp_begin(&s->clauses)[i];
 		print_clause_suduko(c,su);
 		printf("\n");
 	}
-	destroy_suduko(su);*/
+	printf("%d ", s->numofclause);
+	printf("%d ", s->numofvar);
+	destroy_suduko(su);
+	writeCnf(s, "CNF.cnf");
+	destroy_solver(s);
+	/*
 	lit l1 = additional_bool(278  ,8);
 	lit l2 = additional_bool(15710,8);
 	lit l3 = additional_bool(1571 ,8);
 	printf("%d\n", tosequential(7, 8, 8));
 	printf("278  :%d\n", lit_val(l1));
 	printf("15710:%d\n", lit_val(l2));
-	printf("1571 :%d\n", lit_val(l3));
+	printf("1571 :%d\n", lit_val(l3));*/
 	return 0;
 }
 
