@@ -73,7 +73,6 @@ void destroy_suduko(suduko* su) {
 		free(su->space[i]);
 	}
 	free(su->space);
-	free(su);
 }
 
 void read_suduko(suduko* s,const char* filename) {

@@ -61,8 +61,9 @@ void writeCnf(solver* s, const char* filename) {
 	for (i = 0; i < vecp_size(&s->clauses); i++) {
 		c = vecp_begin(&s->clauses)[i];
 		for (j = 0; j < c->size; j++) {
-			fprintf(f, "%d ", c->lits[j]);
+			fprintf(f, "%d ", lit_val(c->lits[j]));
 		}
+		fprintf(f, "0");
 		fprintf(f,"\n");
 	}
 	fclose(f);
@@ -97,6 +98,41 @@ void writeSolution(solver * s, const char* filename) {
 		fprintf(f, "t %20lf", s->time * 1000);
 	}
 	fclose(f);
+}
+
+void print_solution(const char* filename) {
+	char line[256]; int mark;
+	FILE* fp = fopen(filename, "r");
+	if (fp == NULL) {
+		printf("Error opening file!\n");
+		exit(1);
+	}
+	char* token;
+	while (fgets(line, sizeof(line), fp)) {
+		if (line[0] == 's') {
+			sscanf(line, "s %d",&mark);
+			if (mark == 0) {
+				continue;
+			}
+		}
+		else if (line[0] == 't') {
+			token = strtok(line, " ");
+			double value = atof(token);
+			printf("time: %10lf", value);
+		}
+		else {
+			token = strtok(line, " ");
+			while (token != NULL) {
+				int value = atoi(token);
+				if (value < 0) {
+					printf("%d: false\n",abs(value));
+				} else if(value > 0){
+					printf("%d: true\n",value);
+				}
+				token = strtok(NULL, " ");
+			}
+		}
+	}
 }
 
 

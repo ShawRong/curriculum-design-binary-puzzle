@@ -251,8 +251,10 @@ static inline void solver_counttime_finish(solver* s) {
 static inline void destroy_solver(solver * s) {
 	free(s->valuation);
 	free(s->v_level);
+	free(s->counts);
+	free(s->mark);
+	free(s->level_v);
 	vecp_delete(&s->clauses);
-	free(s);
 }
 //********************************************************************************************************
 
