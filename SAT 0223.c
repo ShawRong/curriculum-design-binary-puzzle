@@ -1,48 +1,13 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "struct.h"
-#include "dpll.h"
-#include "FileIO.h"
-#include "suduko.h"
-
-
-void SAT(char* filename1,char* filename2) {
-	solver* s;
-	s = solver_new();
-	readClauseSet(s, filename1);
-
-	solver_set(s);
-	if (solver_solve(s)) {
-		printf("OK\n");
-	}
-	else {
-		printf("NOT OK\n");
-	}
-
-	writeSolution(s, filename2);
-	print_solution(filename2);
-	destroy_solver(s);
-	free(s);
-}
-void SUDUKO(char* filename1, char* filename2) {
-	suduko* su = new_suduko();
-	solver* s = solver_new();
-
-	solver_set(s);
-
-	read_suduko(su, filename1);
-	print_suduko(su);
-	sudukotosat(su, s);
-
-	destroy_suduko(su);
-	free(su);
-	writeCnf(s, filename2);
-	destroy_solver(s);
-	free(s);
-}
+#include "extension.h"
+#include "dpll-plus.h"
+#include "createsuduko.h"
 
 int main() {
+	
+	/*
 	int op = 1; solver* s;
 	suduko* su;
 	char filename1[100];
@@ -75,29 +40,13 @@ int main() {
 				printf("output:");
 				scanf("%s", filename3);
 				SAT(filename2,filename3);
-				/*
-				solver* sol = solver_new();
-				printf("output:");
-				scanf("%s", filename2);
-				readClauseSet(sol, "CNF.cnf");
-
-				if (solver_solve(sol)) {
-					printf("OK\n");
-				}
-				else {
-					printf("NOT OK\n");
-				}
-
-				writeSolution(sol, filename2);
-				print_solution(filename2);
-				destroy_solver(sol);*/
 				getchar(); getchar();
 				break;
 			case 0:
 				break;
 		}
-	}
-
+	}*/
+	
 
 
 	/*
@@ -121,17 +70,25 @@ int main() {
 	}
 
 	printf("%.100lf\n",s->time);
-
-	writeSolution(s, filename2);
-	
+	if (is_uniquesolution(s)) {
+		printf("it is unique solution");
+	}
+	else {
+		printf("it isn't unique solution");
+	}
+	writeSolution_plus(s, filename2);
+	*/
 	//suduko
+	
+
+	/*******************************************************************/
 	/*
-	solver* s = solver_new();
-	solver_set(s);
-	suduko* su = new_suduko();
-	read_suduko(su, "suduko.txt");
+	明天就把DEBUG部分拿到main函数里运行看看是哪里出了问题包括las vegas部分
+	*/
+	suduko* su = Generate_Suduko(8);
 	print_suduko(su);
-	sudukotosat(su,s);
+	/*******************************************************************/
+	/*sudukotosat(su,s);
 	int i = 0;
 	for (i = 0; i < vecp_size(&s->clauses); i++) {
 		clause* c = vecp_begin(&s->clauses)[i];
@@ -143,7 +100,7 @@ int main() {
 	destroy_suduko(su);
 	writeCnf(s, "CNF.cnf");
 	destroy_solver(s);
-	free(s);*/
+	free(s);
 	/*
 	solver* sol = solver_new();
 	char filename1[100];

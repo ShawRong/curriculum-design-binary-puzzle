@@ -168,6 +168,46 @@ static inline void   vecl_push(vecl* v, lit e){
 }
 
 //********************************************************************************************************
+//Stack
+typedef struct stack_t{
+	int* data;
+	int cap;
+	int top;
+}stack;
+
+void new_stack(stack* stk) {
+	stk->cap = 64;
+	stk->top = 0;
+	stk->data = (int*)malloc(sizeof(int) * stk->cap);
+	return stk;
+}
+
+static inline int stack_top(stack* stk) {
+	return stk->top;
+}
+
+static inline void stack_push(stack* stk,int i) {
+	if (stk->top == stk->cap) {
+		int newsize = stk->cap + 64;
+		stk->data = (int*)realloc(stk->data, sizeof(int) * newsize);
+		stk->cap = newsize;
+	}
+	stk->data[stk->top++] = i;
+}
+static inline bool stack_pop(stack* stk,int* e) {
+	if (stk->top >= 0) {
+		*e = stk->data[--(stk->top)];
+		return true;
+	} else {
+		return false;
+	}
+}
+static inline void delete_stack(stack* stk) {
+	free(stk->data);
+}
+
+
+//********************************************************************************************************
 // Solver
 /*========================================================================================================
 	Create a structure to save some information which was useful in dpll.

@@ -3,6 +3,7 @@
 
 #include "struct.h"
 #include <string.h>
+#include "dpll-plus.h""
 
 //***************************************************************************************************************
 //read and write
@@ -80,7 +81,12 @@ void writeSolution(solver * s, const char* filename) {
 	int i; lit l;
 	//if satisfiable
 	if (s->satisifable == true) {
-		fprintf(f,"s 1\n");
+		if (is_uniquesolution(s)) {
+			fprintf(f, "s 1\n");
+		}
+		else {                                    //?
+			fprintf(f, "s -1\n");
+		}
 		fprintf(f, "v ");
 		for (i = 1; i < s->numofvar + 1; i++) {
 			l = tolit(i);

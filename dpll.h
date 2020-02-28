@@ -501,11 +501,16 @@ bool update_counts(solver* s)
 		c = vecp_begin(&s->clauses)[i];
 		for (j = 0; j < clause_size(c); j++) {
 			// A true literal should not be in the working set of clauses!
-			if (s->valuation[c->lits[j]] == l_True) return false;
-			else if (s->valuation[c->lits[j]] == l_Undef) // Only count if not False
+			if (s->valuation[c->lits[j]] == l_True) {
+				return false; 
+			}
+			else if (s->valuation[c->lits[j]] == l_Undef) {
 				s->counts[c->lits[j]]++;
+			}
+
 		}
 	}
+	
 	return true;
 }
 

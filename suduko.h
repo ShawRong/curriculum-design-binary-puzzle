@@ -533,6 +533,7 @@ void sudukotosat(suduko* su,solver* s) {
 	rule_2(su, &s->clauses);
 	rule_3(su, &s->clauses);
 	s->numofclause = vecp_size(&s->clauses);
+	s->tail = vecp_size(&s->clauses);
 }
 
 
