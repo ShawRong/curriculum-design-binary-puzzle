@@ -91,10 +91,10 @@ void writeSolution(solver * s, const char* filename) {
 		for (i = 1; i < s->numofvar + 1; i++) {
 			l = tolit(i);
 			if (s->valuation[l] < 0) {
-				fprintf(f, "-%d ", i);
+				fprintf(f, "-%d \n", i);
 			}
 			else {
-				fprintf(f, "%d ", i);
+				fprintf(f, "%d \n", i);
 			}
 		}
 		fprintf(f, "\n");
@@ -119,6 +119,8 @@ void print_solution(const char* filename) {
 			sscanf(line, "s %d",&mark);
 			if (mark == 0) {
 				continue;
+			} else if (mark == -1) {
+				printf("not unitary solution\n");
 			}
 		}
 		else if (line[0] == 't') {

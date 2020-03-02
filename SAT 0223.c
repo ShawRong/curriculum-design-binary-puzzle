@@ -49,7 +49,7 @@ int main() {
 	
 
 
-	/*
+	
 	solver* s = solver_new();
 	char filename1[100];
 	char filename2[100];
@@ -77,16 +77,16 @@ int main() {
 		printf("it isn't unique solution");
 	}
 	writeSolution_plus(s, filename2);
-	*/
+	
 	//suduko
 	
 
 	/*******************************************************************/
+	
+	//明天就把DEBUG部分拿到main函数里运行看看是哪里出了问题包括las vegas部分
 	/*
-	明天就把DEBUG部分拿到main函数里运行看看是哪里出了问题包括las vegas部分
-	*/
 	suduko* su = Generate_Suduko(8);
-	print_suduko(su);
+	print_suduko(su);*/
 	/*******************************************************************/
 	/*sudukotosat(su,s);
 	int i = 0;

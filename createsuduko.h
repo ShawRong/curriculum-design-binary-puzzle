@@ -172,6 +172,10 @@ suduko* Generate_Suduko(int degree) {
 			solver_set(s);
 			solver_solve(s);
 			/*****************************DEBUG*********************************/
+			writeSolution(s, "out.txt");
+			print_solution("out.txt");
+			/*******************************************************************/
+			/*****************************DEBUG*********************************/
 			
 			/*int temp;
 			for (temp = 0; temp < vecp_size(&s->clauses); temp++) {
@@ -181,7 +185,7 @@ suduko* Generate_Suduko(int degree) {
 			if (is_uniquesolution(s)) {
 				printf("it is unique\n");
 			} else {
-				printf("it is unique\n");
+				printf("it isn't unique\n");
 			}
 			/*******************************************************************/
 			if (!is_uniquesolution(s)) {
@@ -189,6 +193,10 @@ suduko* Generate_Suduko(int degree) {
 				printf("is not unique\n");
 				/*******************************************************************/
 				back(generater);
+				/*****************************DEBUG*********************************/
+				print_suduko(generater->borad);
+				printf("\n");
+				/*******************************************************************/
 			}
 			destroy_solver(s);
 			free(s);

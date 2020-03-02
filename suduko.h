@@ -397,7 +397,11 @@ void addclauses_inrule3(suduko* su, vecp* clauses, int row,int i,int j,int t,int
 	vecl lits; lit l; clause* c;
 	//15711-1
 	vecl_new(&lits);
-	l = build_literal(i, t, su->degree, true);
+	if (row == 1) {
+		l = build_literal(i, t, su->degree, true);
+	} else if(row == 2){
+		l = build_literal(t, i, su->degree, true);
+	}
 	if (m == 0) l = lit_neg(l);
 	vecl_push(&lits, l);
 	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, m), su->degree);
@@ -408,7 +412,12 @@ void addclauses_inrule3(suduko* su, vecp* clauses, int row,int i,int j,int t,int
 	vecl_delete(&lits);
 	//15711-2
 	vecl_new(&lits);
-	l = build_literal(j, t, su->degree, true);
+	if (row == 1) {
+		l = build_literal(j, t, su->degree, true);
+	}
+	else if (row == 2) {
+		l = build_literal(t, j, su->degree, true);
+	}
 	if (m == 0) l = lit_neg(l);
 	vecl_push(&lits, l);
 	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, m), su->degree);
@@ -419,10 +428,20 @@ void addclauses_inrule3(suduko* su, vecp* clauses, int row,int i,int j,int t,int
 	vecl_delete(&lits);
 	//15711-3
 	vecl_new(&lits);
-	l = build_literal(i, t, su->degree, true);
+	if (row == 1) {
+		l = build_literal(i, t, su->degree, true);
+	}
+	else if (row == 2) {
+		l = build_literal(t, i, su->degree, true);
+	}
 	if(m == 1) l = lit_neg(l);
 	vecl_push(&lits, l);
-	l = build_literal(j, t, su->degree, true);
+	if (row == 1) {
+		l = build_literal(j, t, su->degree, true);
+	}
+	else if (row == 2) {
+		l = build_literal(t, j, su->degree, true);
+	}
 	if (m == 1) l = lit_neg(l);
 	vecl_push(&lits, l);
 	l = additional_bool(new_addition(row, i + 1, j + 1, t + 1, m), su->degree);
