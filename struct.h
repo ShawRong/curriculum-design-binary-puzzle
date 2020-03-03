@@ -90,7 +90,7 @@ static inline lit* clause_begin(clause * c) {
 	return c->lits; 
 }
 
-static clause* new_clause(lit * begin, lit * end) {
+static inline clause* new_clause(lit * begin, lit * end) {
 	clause* c;
 
 	c = (clause*)malloc(sizeof(clause));
@@ -102,6 +102,10 @@ static clause* new_clause(lit * begin, lit * end) {
 		c->lits[i] = begin[i];
 
 	return c;
+}
+static inline void destroy_clause(clause* c) {
+	free(c->lits);
+	free(c);
 }
 
 //********************************************************************************************************
@@ -294,6 +298,10 @@ static inline void destroy_solver(solver * s) {
 	free(s->counts);
 	free(s->mark);
 	free(s->level_v);
+	int i;
+	for (i = 0; i < vecp_size(&s->clauses); i++) {
+		destroy_clause(vecp_begin(&s->clauses)[i]);
+	}
 	vecp_delete(&s->clauses);
 }
 //********************************************************************************************************

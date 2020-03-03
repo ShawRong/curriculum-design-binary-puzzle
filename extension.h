@@ -5,6 +5,7 @@
 #include "dpll.h"
 #include "FileIO.h"
 #include "suduko.h"
+#include "createsuduko.h"
 
 void SAT(char* filename1, char* filename2) {
 	solver* s;
@@ -39,5 +40,15 @@ void SUDUKO(char* filename1, char* filename2) {
 	destroy_solver(s);
 	free(s);
 }
+void GENERATE_SUDUKO(char* filename) {
+	int degree;
+	printf("input the degree\n");
+	scanf("%d", &degree);
+	suduko_generater* generater = new_suduko_generater(degree);
+	suduko* su = Generate_Suduko(generater);
+	write_suduko(filename,su);
+	destroy_suduko_generater(generater);
+}
+
 
 #endif

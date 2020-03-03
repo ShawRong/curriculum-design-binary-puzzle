@@ -19,9 +19,13 @@ bool las_vegas(int n,int degree,suduko* su) {
 	srand((unsigned)time(NULL));
 	int i; int random; int x; int y; int t; bool res;
 	for (i = 0; i <= n; i++) {
-		random = rand() %(su->degree*su->degree + 1);
+		random = rand() %(su->degree*su->degree) + 1;
+		/*****************************DEBUG*********************************/
+		printf("%d\n",random);
+		printf("\n");
+		/*******************************************************************/
 		vtoxy(&x, &y, su->degree, random);
-		t = rand() % (3) - 1;
+		t = rand() % 2;
 		su->space[toindex(x)][toindex(y)] = t;
 	}
 	solver* s = solver_new();
@@ -43,6 +47,10 @@ suduko* make_board(int degree) {  //use random num as seed
 	suduko* su = new_suduko();
 	suduko_set(su, degree);
 	while (!las_vegas(5, su->degree, su));
+	/*****************************DEBUG*********************************/
+	print_suduko(su);
+	printf("\n");
+	/*******************************************************************/
 	return su;
 }
 
@@ -64,6 +72,7 @@ void destroy_suduko_generater(suduko_generater* generater) {
 	destroy_suduko(generater->borad);
 	free(generater->canbe_hole);
 	delete_stack(&generater->save);
+	free(generater->sequence);
 	free(generater);
 }
 
@@ -90,16 +99,11 @@ void fill_borad(suduko_generater* generater) {
 
 void dig(suduko_generater* generater,int i,int j) {
 	suduko* su = generater->borad;
-	if (su->space[i][j] == 0) {
-		stack_push(&generater->save, -1 * xytov(toi(i), toi(j), su->degree));
-	} else {
-		stack_push(&generater->save, xytov(toi(i), toi(j), su->degree));
-	}
 	su->space[i][j] = -1;
 	
 }
 
-bool back(suduko_generater* generater) {
+bool gene_back(suduko_generater* generater) {
 	int v; int x; int y; int mark;
 	suduko* su = generater->borad;
 	if (stack_pop(&generater->save, &v)) {
@@ -150,8 +154,39 @@ bool exist_canbe_hole(suduko_generater* generater) {
 	return false;
 }
 
-suduko* Generate_Suduko(int degree) {
-	suduko_generater* generater = new_suduko_generater(degree);
+bool sol_isunique(suduko_generater* generater,int choice) {
+	int x; int y;
+	vtoxy(&x, &y, generater->borad->degree, choice);
+
+	suduko* su = generater->borad;
+	solver* s = solver_new();
+	
+	int save = su->space[toindex(x)][toindex(y)];
+	if (su->space[toindex(x)][toindex(y)] == 0) {
+		su->space[toindex(x)][toindex(y)] = 1;
+	} else if (su->space[toindex(x)][toindex(y)] == 1) {
+		su->space[toindex(x)][toindex(y)] = 0;
+	}
+	sudukotosat(su, s);
+	solver_set(s);
+	if (solver_solve(s)) {
+		su->space[toindex(x)][toindex(y)] = save;
+		destroy_solver(s);
+		free(s);
+		return false;
+	} else {
+		su->space[toindex(x)][toindex(y)] = save;
+		destroy_solver(s);
+		free(s);
+		return true;
+	}
+}
+
+suduko* Generate_Suduko(suduko_generater* generater) {
+	/*****************************DEBUG*********************************/
+	print_suduko(generater->borad);
+	printf("\n");
+	/*******************************************************************/
 	set_sequence(generater);
 	int i = 0; int choice; int v; int x; int y; solver* s;
 	bool flag = false;
@@ -162,44 +197,13 @@ suduko* Generate_Suduko(int degree) {
 		if (generater->canbe_hole[choice]) {
 			generater->canbe_hole[choice] = false;
 			vtoxy(&x,&y,generater->borad->degree,choice);
-			dig(generater,toindex(x),toindex(y));
+			if (sol_isunique(generater,choice)) {
+				dig(generater, toindex(x), toindex(y));
+			}
 			/*****************************DEBUG*********************************/
 			print_suduko(generater->borad);
 			printf("\n");
 			/*******************************************************************/
-			s = solver_new();
-			sudukotosat(generater->borad, s);
-			solver_set(s);
-			solver_solve(s);
-			/*****************************DEBUG*********************************/
-			writeSolution(s, "out.txt");
-			print_solution("out.txt");
-			/*******************************************************************/
-			/*****************************DEBUG*********************************/
-			
-			/*int temp;
-			for (temp = 0; temp < vecp_size(&s->clauses); temp++) {
-				print_clause(vecp_begin(&s->clauses)[temp]);
-				printf("\n");
-			}*/
-			if (is_uniquesolution(s)) {
-				printf("it is unique\n");
-			} else {
-				printf("it isn't unique\n");
-			}
-			/*******************************************************************/
-			if (!is_uniquesolution(s)) {
-				/*****************************DEBUG*********************************/
-				printf("is not unique\n");
-				/*******************************************************************/
-				back(generater);
-				/*****************************DEBUG*********************************/
-				print_suduko(generater->borad);
-				printf("\n");
-				/*******************************************************************/
-			}
-			destroy_solver(s);
-			free(s);
 		}
 		else {
 			i++;

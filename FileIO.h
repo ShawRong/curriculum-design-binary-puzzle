@@ -4,6 +4,7 @@
 #include "struct.h"
 #include <string.h>
 #include "dpll-plus.h""
+#include "suduko.h"
 
 //***************************************************************************************************************
 //read and write
@@ -120,7 +121,7 @@ void print_solution(const char* filename) {
 			if (mark == 0) {
 				continue;
 			} else if (mark == -1) {
-				printf("not unitary solution\n");
+				printf("not unique solution\n");
 			}
 		}
 		else if (line[0] == 't') {
@@ -143,6 +144,24 @@ void print_solution(const char* filename) {
 	}
 }
 
+void write_suduko(const char* filename,suduko* su) {
+	FILE* f = fopen(filename, "w");
+	if (f == NULL) {
+		printf("Error opening file!\n");
+		exit(1);
+	}
+	int i = 0; int v; int x; int y;
+	fprintf(f, "d %d\n", su->degree);
+	for (i = 0; i < su->degree * su->degree; i++) {
+		v = toi(i);
+		vtoxy(&x, &y,su->degree, v);
+		if (su->space[toindex(x)][toindex(y)] == -1) {
+			continue;
+		}
+		fprintf(f,"%d %d %d\n", x, y, su->space[toindex(x)][toindex(y)]);
+	}
+	fclose(f);
+}
 
 
 #endif

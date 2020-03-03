@@ -7,7 +7,7 @@
 
 int main() {
 	
-	/*
+	
 	int op = 1; solver* s;
 	suduko* su;
 	char filename1[100];
@@ -18,6 +18,7 @@ int main() {
 		printf("				SAT or Puzzle  \n");
 		printf("-------------------------------------------------\n");
 		printf("		1.SAT				2.Puzzle\n");
+		printf("		3.GENERATE SUDUKO RANDOMLY \n");
 		printf("	0.Exit\n");
 		printf("-------------------------------------------------\n");
 		printf("    请选择你的操作[0~2]:");
@@ -42,14 +43,20 @@ int main() {
 				SAT(filename2,filename3);
 				getchar(); getchar();
 				break;
+			case 3:
+				printf("output:");
+				scanf("%s", filename1);
+				GENERATE_SUDUKO(filename1);
+				getchar(); getchar();
+				break;
 			case 0:
 				break;
 		}
-	}*/
+	}
 	
 
 
-	
+	/*
 	solver* s = solver_new();
 	char filename1[100];
 	char filename2[100];
@@ -77,16 +84,13 @@ int main() {
 		printf("it isn't unique solution");
 	}
 	writeSolution_plus(s, filename2);
-	
+	*/
 	//suduko
 	
 
 	/*******************************************************************/
 	
 	//明天就把DEBUG部分拿到main函数里运行看看是哪里出了问题包括las vegas部分
-	/*
-	suduko* su = Generate_Suduko(8);
-	print_suduko(su);*/
 	/*******************************************************************/
 	/*sudukotosat(su,s);
 	int i = 0;
