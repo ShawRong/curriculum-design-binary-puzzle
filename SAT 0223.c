@@ -21,7 +21,7 @@ int main() {
 		printf("		3.GENERATE SUDUKO RANDOMLY \n");
 		printf("	0.Exit\n");
 		printf("-------------------------------------------------\n");
-		printf("    请选择你的操作[0~2]:");
+		printf("    请选择你的操作[0~3]:");
 		scanf("%d", &op);
 		switch (op) {
 			case 1:
@@ -53,6 +53,17 @@ int main() {
 				break;
 		}
 	}
+	/*
+	lit l; int v; int* array;
+	l = additional_bool(new_addition(1, 15, 16, -1, -1), 16);
+	array = (int*)malloc(sizeof(int) * 5);
+	array =  new_addition(1, 15, 16, -1, -1);
+	v = lit_val(l);
+	printf("%d\n", v);
+	int i = 0;
+	for (i = 0; i < 5; i++) {
+		printf("%d ", array[i]);
+	}*/
 	
 
 

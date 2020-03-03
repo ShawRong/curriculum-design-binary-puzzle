@@ -299,49 +299,32 @@ int tosequential(int x,int y,int degree) {
 	res = (-1 * (x * x) + (2 * degree - 1) * x + 2 * y - 2 * degree)/2;
 	return res;
 }
-void breakup(int num,int* remain) {
-	int i = 0;
-	while (num) {
-		remain[i] = num % 10;
-		num /= 10;
-		i++;
-	}
-}
 
-int arraytonum_5(int* a) {
-	int i = 4;
-	int num = 0;
-	while (a[i] != -1 && i >= 0) {
-		num *= 10;
-		num += a[i];
-		i--;
-	}
-	return num;
-}
 
-int new_addition(int a,int b,int c,int d,int e) {  //no exist = -1
-	int array[5]; int index; int ans;
+int* new_addition(int a,int b,int c,int d,int e) {  //no exist = -1
+	int* array = (int*)malloc(sizeof(int) * 5);
+	int index; int i = 0;
 	for (index = 0; index < 5; index++) {
-		array[index] = -1;
+		array[index] = 0;
 	}
-	array[4] = a;
-	array[3] = b ;
-	array[2] = c;
-	array[1] = d;
-	array[0] = e;
-	ans = arraytonum_5(array);
-	return ans;
+	if (e != -1) {
+		array[i++] = e;
+	}
+	if (d != -1) {
+		array[i++] = d;
+	}
+	array[i++] = c;
+	array[i++] = b;
+	array[i++] = a;
+	
+	return array;
 }
 
-lit additional_bool(int input, int degree) {
-	bool row = true; int remain[5]; int order_3; int order_2; int order_1;
+lit additional_bool(int* input, int degree) {
+	bool row = true; int* remain; int order_3; int order_2; int order_1;
 	int v; int i; lit l;
-	//initial
-	for (i = 0; i < 5; i++) {
-		remain[i] = 0;
-	}
 
-	breakup(input,remain);
+	remain = input;
 	if (remain[3] == 0) {
 		if (remain[2] == 2) row = false;
 		order_3 = tosequential(remain[1], remain[0],degree);
@@ -369,6 +352,7 @@ lit additional_bool(int input, int degree) {
 	}
 	v += degree * degree;
 	l = tolit(v);
+	free(input);
 	return l;
 }
 /*=============================================================
@@ -511,6 +495,9 @@ void addclauses_inrule3__(suduko* su,vecp* clauses, int row,int i,int j) {
 		vecp_push(clauses,c);
 		vecl_delete(&lits);
 	}
+	//157
+	c = new_clause(&save,&save+1);
+	vecp_push(clauses, c);
 }
 
 void rule_3(suduko* su,vecp* clauses) {
@@ -557,6 +544,7 @@ void sudukotosat(suduko* su,solver* s) {
 
 
 
+/*
 int trans_fromorder(int order_1,int order_2,int order_3,bool row,suduko* su) {
 	int array[5]; int i;
 	for (i = 0; i < 5; i++) {
@@ -570,7 +558,7 @@ int trans_fromorder(int order_1,int order_2,int order_3,bool row,suduko* su) {
 	int x; int y;
 	special_restoxy(&x,&y,su->degree,order_3);
 	array[3] = x; array[2] = y;
-	if (order_2 == 0 /*su->degree + 1*/) {
+	if (order_2 == 0 /*su->degree + 1) {
 		return arraytonum_5(array);
 	} else {
 		array[1] = order_2;
@@ -583,7 +571,7 @@ int trans_fromorder(int order_1,int order_2,int order_3,bool row,suduko* su) {
 		return arraytonum_5(array);
 	}
 	return arraytonum_5(array);
-}
+}*/
 
 /*=============================================================
 example: 1 5 8 1 1
@@ -605,6 +593,7 @@ the order = order_1 + (order_2-1)*3 + (order_3-1)*(3*d+1)
 
 ==============================================================*/
 
+/*
 void print_clause_suduko(clause* c, suduko* s) {
 	int i; int x; int y; int v;
 	for (i = 0; i < c->size; i++) {
@@ -651,7 +640,7 @@ void print_clause_suduko(clause* c, suduko* s) {
 		
 	}
 	printf("\n");
-}
+}*/
 
 /*==========================================================
 file:
