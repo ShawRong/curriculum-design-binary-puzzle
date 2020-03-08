@@ -106,7 +106,7 @@ void read_suduko(suduko* s,const char* filename) {
 }
 
 void print_suduko(suduko* s) {
-	int i = 0; int j = 0;
+	int i = 0; int j = 0; int t;
 	for (i = 0; i < s->degree; i++) {
 		for (j = 0; j < s->degree; j++) {
 			printf("%d ", toi(i));

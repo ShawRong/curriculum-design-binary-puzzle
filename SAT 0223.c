@@ -4,6 +4,7 @@
 #include "extension.h"
 #include "dpll-plus.h"
 #include "createsuduko.h"
+#include "showsuduko.h"
 
 int main() {
 	
@@ -15,14 +16,14 @@ int main() {
 	char filename3[100];
 	while (op) {
 		system("cls");	printf("\n\n");
-		printf("				SAT or Puzzle  \n");
-		printf("-------------------------------------------------\n");
-		printf("		1.SAT				2.Puzzle\n");
-		printf("		3.GENERATE SUDUKO RANDOMLY \n");
+		printf("				SAT or BinaryPuzzle  \n");
+		printf("---------------------------------------------------------------------------\n");
+		printf("		1.SAT				2.BinaryPuzzle\n");
 		printf("	0.Exit\n");
-		printf("-------------------------------------------------\n");
-		printf("    请选择你的操作[0~3]:");
+		printf("---------------------------------------------------------------------------\n");
+		printf("    请选择你的操作[0~2]:");
 		scanf("%d", &op);
+		system("CLS");
 		switch (op) {
 			case 1:
 				printf("input:");
@@ -33,23 +34,12 @@ int main() {
 				getchar(); getchar();
 				break;
 			case 2:
-				printf("input the suduko:");
-				scanf("%s", filename1);
-				printf("output the cnf:");
-				scanf("%s", filename2);
-				SUDUKO(filename1, filename2);
-				printf("output:");
-				scanf("%s", filename3);
-				SAT(filename2,filename3);
-				getchar(); getchar();
-				break;
-			case 3:
-				printf("output:");
-				scanf("%s", filename1);
-				GENERATE_SUDUKO(filename1);
+				SUDUKO();
 				getchar(); getchar();
 				break;
 			case 0:
+				break;
+			default:
 				break;
 		}
 	}

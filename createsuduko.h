@@ -20,10 +20,6 @@ bool las_vegas(int n,int degree,suduko* su) {
 	int i; int random; int x; int y; int t; bool res;
 	for (i = 0; i <= n; i++) {
 		random = rand() %(su->degree*su->degree) + 1;
-		/*****************************DEBUG*********************************/
-		printf("%d\n",random);
-		printf("\n");
-		/*******************************************************************/
 		vtoxy(&x, &y, su->degree, random);
 		t = rand() % 2;
 		su->space[toindex(x)][toindex(y)] = t;
@@ -47,10 +43,6 @@ suduko* make_board(int degree) {  //use random num as seed
 	suduko* su = new_suduko();
 	suduko_set(su, degree);
 	while (!las_vegas(5, su->degree, su));
-	/*****************************DEBUG*********************************/
-	print_suduko(su);
-	printf("\n");
-	/*******************************************************************/
 	return su;
 }
 
@@ -69,7 +61,6 @@ suduko_generater* new_suduko_generater(int degree) {
 }
 
 void destroy_suduko_generater(suduko_generater* generater) {
-	destroy_suduko(generater->borad);
 	free(generater->canbe_hole);
 	delete_stack(&generater->save);
 	free(generater->sequence);
@@ -183,10 +174,6 @@ bool sol_isunique(suduko_generater* generater,int choice) {
 }
 
 suduko* Generate_Suduko(suduko_generater* generater) {
-	/*****************************DEBUG*********************************/
-	print_suduko(generater->borad);
-	printf("\n");
-	/*******************************************************************/
 	set_sequence(generater);
 	int i = 0; int choice; int v; int x; int y; solver* s;
 	bool flag = false;
@@ -200,10 +187,6 @@ suduko* Generate_Suduko(suduko_generater* generater) {
 			if (sol_isunique(generater,choice)) {
 				dig(generater, toindex(x), toindex(y));
 			}
-			/*****************************DEBUG*********************************/
-			print_suduko(generater->borad);
-			printf("\n");
-			/*******************************************************************/
 		}
 		else {
 			i++;
