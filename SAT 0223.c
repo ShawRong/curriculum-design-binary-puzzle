@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "extension.h"
-#include "dpll-plus.h"
-#include "createsuduko.h"
-#include "showsuduko.h"
 
 int main() {
 	

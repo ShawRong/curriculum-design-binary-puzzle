@@ -227,18 +227,11 @@ typedef struct Solver {
 	vecp clauses;  //the vector of clause
 	int tail; //index of the end of clauses
 	
-	int cur_level; //level in the tree
 	bool satisifable; //true = satisifable
-	
-	bool* mark;  //mark the literal which was used to simplify the cnf true or false
-
-	lit* v_level;  //  return the literal l in level i was chose
-	int* level_v; // return the level i where the literal l was chose
 	
 	lbool* valuation;  //the valuation of each literal
 	
 	int* counts; //number of each literal
-
 }solver;
 
 static inline solver* solver_new() {
@@ -248,15 +241,11 @@ static inline solver* solver_new() {
 	s->cap = 0;
 	s->tail = 0;
 	s->satisifable = false;
-	s->cur_level = -1;
 	s->time = 0;
 
 	vecp_new(&s->clauses);
-	s->v_level = NULL;
 	s->valuation = NULL;
 	s->counts = NULL;
-	s->mark = NULL;
-	s->level_v = NULL;
 
 	return s;
 }
@@ -264,17 +253,11 @@ static inline solver* solver_new() {
 static inline void solver_set(solver * s) {   //set the member to 0 or l_Udef
 	s->cap = s->numofvar * 2 + 1;
 	s->valuation = (lbool*)realloc(s->valuation, sizeof(lbool) * s->cap);
-	s->v_level = (lit*)realloc(s->v_level, sizeof(lit) * s->cap);
 	s->counts = (int*)realloc(s->counts, sizeof(int) * s->cap);
-	s->mark = (bool*)realloc(s->mark, sizeof(bool) * s->cap);
-	s->level_v = (int*)realloc(s->level_v, sizeof(int) * s->cap);
 
 	int i = 0;
 	for (i = 0; i < s->cap; i++) {
 		s->valuation[i] = l_Undef;
-		s->v_level[i] = 0;
-		s->mark[i] = false;
-		s->level_v[i] = -1;
 		s->counts[i] = 0;
 	}
 }
@@ -294,17 +277,14 @@ static inline void solver_counttime_finish(solver* s) {
 
 static inline void destroy_solver(solver * s) {
 	free(s->valuation);
-	free(s->v_level);
 	free(s->counts);
-	free(s->mark);
-	free(s->level_v);
 	int i;
 	for (i = 0; i < vecp_size(&s->clauses); i++) {
 		destroy_clause(vecp_begin(&s->clauses)[i]);
 	}
 	vecp_delete(&s->clauses);
 }
-//********************************************************************************************************
+
 
 #endif
 

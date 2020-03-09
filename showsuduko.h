@@ -74,11 +74,11 @@ void Show(suduko* s) {
 	gotoxy(io + s->degree * 4 + 2,jo + 4);
 	printf("Welcome");
 	gotoxy(io + s->degree * 4 + 2, jo + 5);
-	printf("if you input 0/0/1 which means to create another one");
+	printf("input 0/0/1, which means to create another one");
 	gotoxy(io + s->degree * 4 + 2, jo + 6);
-	printf("if you input 1/2/0 which means that put 0 at col 2 & row 1");
+	printf("input 1/2/0, which means that put 0 at col 2 & row 1");
 	gotoxy(io + s->degree * 4 + 2, jo + 7);
-	printf("if you input 0/0/0, you will see auto solving");
+	printf("if you input 0/0/0, you will see auto solving and exit");
 	gotoxy(io + s->degree * 4 + 2, jo + 8);
 	setwhite();
 }
