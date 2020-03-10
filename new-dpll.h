@@ -15,7 +15,6 @@ void print_clause(clause* c) {
 }
 /*******************/
 
-//********************************************************************************************************
 //****************************************MEMORY*****************************************************
 typedef struct memory_t {
 	int cur_level;
@@ -65,29 +64,29 @@ bool propagate(solver* s, lit choice, bool unit,memory* memo) {
 	s->valuation[lit_neg(choice)] = l_False;
 
 	//propagating
-	for (i = 0; i < s->tail; i++) {
+	for (i = 0; i < s->numofclause; i++) {
 		c = (clause*)vecp_begin(&s->clauses)[i];
-		for (j = 0; j < clause_size(c); j++) {
-			if (j == 0) {
-				false_count = 0;
-			}
-			if (s->valuation[c->lits[j]] == l_False) {
-				false_count++;
-			}
-			else if (s->valuation[c->lits[j]] == l_True) { //delete clause from clauses
-				c->mark = memo->cur_level;
-				if (s->tail == 1) {
-					s->tail--;
-					s->satisifable = true;
-					return true;
+		if (c->mark == -1) {
+			for (j = 0; j < clause_size(c); j++) {
+				if (j == 0) {
+					false_count = 0;
 				}
-				vecp_begin(&s->clauses)[i] = vecp_begin(&s->clauses)[--s->tail];
-				vecp_begin(&s->clauses)[s->tail] = c;
-				i = i--;
-				break;
-			}
-			if (false_count == clause_size(c)) { //check false count
-				no_conflict = false;
+				if (s->valuation[c->lits[j]] == l_False) {
+					false_count++;
+				} else if (s->valuation[c->lits[j]] == l_True) { //delete clause from clauses
+					c->mark = memo->cur_level;
+					if (s->left == 1) {
+						s->left--;
+						s->satisifable = true;
+						return true;
+					}
+					s->left--;
+					break;
+				}
+
+				if (false_count == clause_size(c)) { //check false count
+					no_conflict = false;
+				}
 			}
 		}
 	}
@@ -98,20 +97,21 @@ bool find_unit(solver* s, lit* unit_lit) {
 	int i; int j; int false_count;
 	clause* c;
 
-	for (i = 0; i < s->tail; i++) {
+	for (i = 0; i < s->numofclause; i++) {
 		c = (clause*)vecp_begin(&s->clauses)[i];
-		for (j = 0; j < clause_size(c); j++) {
-			if (j == 0) {
-				false_count = 0;
-			}
-			if (s->valuation[c->lits[j]] == l_False) {
-				false_count++;
-			}
-			else {
-				*unit_lit = c->lits[j];
-			}
-			if (j == clause_size(c) - 1 && false_count == clause_size(c) - 1) {
-				return true;
+		if (c->mark == -1) {
+			for (j = 0; j < clause_size(c); j++) {
+				if (j == 0) {
+					false_count = 0;
+				}
+				if (s->valuation[c->lits[j]] == l_False) {
+					false_count++;
+				} else {
+					*unit_lit = c->lits[j];
+				}
+				if (j == clause_size(c) - 1 && false_count == clause_size(c) - 1) {
+					return true;
+				}
 			}
 		}
 	}
@@ -125,20 +125,20 @@ bool recount(solver* s) { //recount the literals in the clauses
 		s->record[i] = 0;
 	}
 
-	for (i = 0; i < s->tail; i++) {
+	for (i = 0; i < s->numofclause; i++) {
 		c = (clause*)vecp_begin(&s->clauses)[i];
-		for (j = 0; j < clause_size(c); j++) {
+		if (c->mark == -1) {
+			for (j = 0; j < clause_size(c); j++) {
 
-			if (s->valuation[c->lits[j]] == l_True) {
-				return false;
+				if (s->valuation[c->lits[j]] == l_True) {
+					return false;
+				}
+				else if (s->valuation[c->lits[j]] == l_Undef) {
+					s->record[c->lits[j]]++;
+				}
 			}
-			else if (s->valuation[c->lits[j]] == l_Undef) {
-				s->record[c->lits[j]]++;
-			}
-
 		}
 	}
-
 	return true;
 }
 
@@ -199,12 +199,29 @@ lit choosev_RANDOM(solver* s) {//choose the pure literal
 	int i;int random;
 	srand((unsigned)time(NULL));
 	while (true) {
-		random = rand() % (s->tail);
+		random = rand() % (s->numofclause);
 		c = vecp_begin(&s->clauses)[random];
-		for (i = 0; i < clause_size(c); i++) {
-			l = c->lits[i];
-			if (s->valuation[l] != l_False) {
-				return l;
+		if (c->mark == -1) {
+			for (i = 0; i < clause_size(c); i++) {
+				l = c->lits[i];
+				if (s->valuation[l] != l_False) {
+					return l;
+				}
+			}
+		}
+	}
+}
+
+lit choosev_FIRST(solver* s) {
+	clause* c;
+	int i; int j;
+	for (i = 0; i < s->numofclause; i++) {
+		c = vecp_begin(&s->clauses)[i];
+		if (c->mark == -1) {
+			for (j = 0; j < c->size; j++) {
+				if (s->valuation[c->lits[j]] != l_False) {
+					return c->lits[j];
+				}
 			}
 		}
 	}
@@ -222,13 +239,12 @@ lit back(solver* s,memory* memo) {
 		}
 	}
 
-	for (i = s->tail; i < vecp_size(&s->clauses); i++) { //reset the clauses
+	for (i = 0; i < s->numofclause; i++) { //reset the clauses
 		c = (clause*)vecp_begin(&s->clauses)[i];
 		if (c->mark == memo->cur_level) {
 			c->mark = -1;
-			s->tail++;
+			s->left++;
 		}
-		else break;
 	}
 
 	return memo->v_level[memo->cur_level--];  //return the literal in this level
@@ -285,14 +301,17 @@ bool dpll(solver* s,memory* memo) {
 	/*********
 	printf("level:%d\n", memo->cur_level);
 	int temp = 0; clause* c;
-	for (temp = 0; temp < s->tail; temp++) {
+	for (temp = 0; temp < s->left; temp++) {
 		c = vecp_begin(&s->clauses)[temp];
-		print_clause(c);
-		printf("\n");
+		if (c->mark == -1) {
+			print_clause(c);
+			printf("\n");
+		}
 	}
+	printf("\n");
 	/*********/
 	
-	lit nextl = choosev_MODE(s); //choose mode
+	lit nextl = choosev_FIRST(s); //choose mode
 	memo->cur_level++;
 	/*********
 	printf("p choice:%d\n", lit_val(nextl));

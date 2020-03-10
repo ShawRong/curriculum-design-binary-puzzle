@@ -224,7 +224,7 @@ typedef struct Solver {
 	double time;
 
 	vecp clauses;  //the vector of clause
-	int tail; //index of the end of clauses
+	int left; //index of the end of clauses
 	
 	bool satisifable; //true = satisifable
 	
@@ -238,7 +238,7 @@ static inline solver* solver_new() {
 	assert(s != NULL);
 	s->numofvar = 0;
 	s->cap = 0;
-	s->tail = 0;
+	s->left = 0;
 	s->satisifable = false;
 	s->time = 0;
 
@@ -262,7 +262,7 @@ static inline void solver_set(solver * s) {   //set the member to 0 or l_Udef
 }
 static inline void solver_addclause(solver * s, clause * c) {
 	vecp_push(&s->clauses, c);
-	s->tail++;    //the index after last point
+	s->left++;    //the index after last point
 }
 
 
