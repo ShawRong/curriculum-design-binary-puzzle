@@ -2,7 +2,7 @@
 #define dpll_plus_h
 
 #include "FileIO.h"
-#include "dpll.h"
+#include "new-dpll.h"
 
 bool is_uniquesolution(solver* s) {
 	int i; int mark = true; lit l;

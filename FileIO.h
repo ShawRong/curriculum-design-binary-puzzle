@@ -99,10 +99,10 @@ void writeSolution(solver * s, const char* filename) {
 			}
 		}
 		fprintf(f, "\n");
-		fprintf(f,"t %20lf", s->time * 1000);
+		fprintf(f,"t %lf", s->time);
 	} else {   //if not satisfiable
 		fprintf(f, "s 0\n");
-		fprintf(f, "t %20lf", s->time * 1000);
+		fprintf(f, "t %lf", s->time);
 	}
 	fclose(f);
 }
@@ -127,7 +127,7 @@ void print_solution(const char* filename) {
 		else if (line[0] == 't') {
 			token = strtok(line, " ");
 			double value = atof(token);
-			printf("time: %10lf", value);
+			printf("time: %1f", value);
 		}
 		else {
 			token = strtok(line, " ");

@@ -2,7 +2,7 @@
 #define extension_h
 
 #include "struct.h"
-#include "dpll.h"
+#include "new-dpll.h"
 #include "FileIO.h"
 #include "suduko.h"
 #include "createsuduko.h"
@@ -13,13 +13,27 @@ void SAT(char* filename1, char* filename2) {
 	s = solver_new();
 	readClauseSet(s, filename1);
 
+	clock_t start, stop;
+
+
 	solver_set(s);
+
+	start = clock();
+
 	if (solver_solve(s)) {
 		printf("OK\n");
 	}
 	else {
 		printf("NOT OK\n");
 	}
+
+	stop = clock();
+
+	double time = (double)(stop - start) / CLOCKS_PER_SEC;
+
+	printf("time = %lf ms\n",time*1000);
+
+	s->time = time*1000;
 
 	writeSolution(s, filename2);
 	print_solution(filename2);

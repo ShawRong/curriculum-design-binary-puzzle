@@ -221,7 +221,6 @@ typedef struct Solver {
 	int numofclause;  //num of clause
 	int cap;  // = numofvar * 2 + 1
 
-	clock_t start, stop;  // to count time when the solver_solve begin
 	double time;
 
 	vecp clauses;  //the vector of clause
@@ -231,7 +230,7 @@ typedef struct Solver {
 	
 	lbool* valuation;  //the valuation of each literal
 	
-	int* counts; //number of each literal
+	int* record; //record when choose literal
 }solver;
 
 static inline solver* solver_new() {
@@ -245,7 +244,7 @@ static inline solver* solver_new() {
 
 	vecp_new(&s->clauses);
 	s->valuation = NULL;
-	s->counts = NULL;
+	s->record = NULL;
 
 	return s;
 }
@@ -253,12 +252,12 @@ static inline solver* solver_new() {
 static inline void solver_set(solver * s) {   //set the member to 0 or l_Udef
 	s->cap = s->numofvar * 2 + 1;
 	s->valuation = (lbool*)realloc(s->valuation, sizeof(lbool) * s->cap);
-	s->counts = (int*)realloc(s->counts, sizeof(int) * s->cap);
+	s->record = (int*)realloc(s->record, sizeof(int) * s->cap);
 
 	int i = 0;
 	for (i = 0; i < s->cap; i++) {
 		s->valuation[i] = l_Undef;
-		s->counts[i] = 0;
+		s->record[i] = 0;
 	}
 }
 static inline void solver_addclause(solver * s, clause * c) {
@@ -266,18 +265,10 @@ static inline void solver_addclause(solver * s, clause * c) {
 	s->tail++;    //the index after last point
 }
 
-// Function to count time
-static inline void solver_counttime_begin(solver* s) {
-	s->start = clock();
-}
-static inline void solver_counttime_finish(solver* s) {
-	s->stop = clock();
-	s->time = (double)((s->stop - s->start) / CLK_TCK);
-}
 
 static inline void destroy_solver(solver * s) {
 	free(s->valuation);
-	free(s->counts);
+	free(s->record);
 	int i;
 	for (i = 0; i < vecp_size(&s->clauses); i++) {
 		destroy_clause(vecp_begin(&s->clauses)[i]);

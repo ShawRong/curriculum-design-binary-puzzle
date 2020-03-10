@@ -7,18 +7,51 @@
 #include <stdio.h>
 
 
-bool propagate(solver* s, lit choice, bool new_level) {
+//********************************************************************************************************
+//****************************************MEMORY*****************************************************
+typedef struct memory_t {
+	int cur_level;
+	bool* mark;  //mark the literal which was used to simplify the cnf true or false
+	lit* v_level;  //  return the literal l in level i was chose
+	int* level_v; // return the level i where the literal l was chose
+}memory;
+
+memory* new_memory(solver* s) {
+	memory* itr = (memory*)malloc(sizeof(memory));
+	itr->cur_level = -1;
+	itr->level_v = (int*)malloc(sizeof(int) * s->cap);
+	itr->v_level = (lit*)malloc(sizeof(lit) * s->cap);
+	itr->mark = (bool*)malloc(sizeof(bool) * s->cap);
+	int i = 0;
+	for (i = 0; i < s->cap; i++) {
+		itr->v_level[i] = 0;
+		itr->level_v[i] = -1;
+		itr->mark[i] = false;
+	}
+	return itr;
+}
+
+void destroy_memory(memory* memo) {
+	free(memo->v_level);
+	free(memo->level_v);
+	free(memo->mark);
+	free(memo);
+}
+
+//********************************************************************************************************
+
+bool propagate(solver* s, lit choice, bool new_level,memory* memo) {
 	bool no_conflict = true;
 	int i; int j; int false_count;
 	clause* c;
 
 	//update the info of literal
 	if (new_level) {
-		s->cur_level++;
-		s->v_level[s->cur_level] = choice;
-		s->mark[choice] = true;
+		memo->cur_level++;
+		memo->v_level[memo->cur_level] = choice;
+		memo->mark[choice] = true;
 	}
-	s->level_v[choice] = s->cur_level;
+	memo->level_v[choice] = memo->cur_level;
 	s->valuation[choice] = l_True;
 	s->valuation[lit_neg(choice)] = l_False;
 
@@ -33,7 +66,7 @@ bool propagate(solver* s, lit choice, bool new_level) {
 				false_count++;
 			}
 			else if (s->valuation[c->lits[j]] == l_True) { //delete clause from clauses
-				c->mark = s->cur_level;
+				c->mark = memo->cur_level;
 				if (s->tail == 1) {
 					s->tail--;
 					s->satisifable = true;
@@ -89,10 +122,10 @@ bool find_unit(solver* s, lit* unit_lit) {
 *	if it return false--->can not continue
 *	if it return true--->success
 */
-bool unit_propagate(solver* s) {
+bool unit_propagate(solver* s,memory* memo) {
 	lit l;
 	while (find_unit(s, &l)) {
-		if (!propagate(s, l, false)) {
+		if (!propagate(s, l, false,memo)) {
 			return false;
 		}
 		if (s->tail == 0) {
@@ -107,7 +140,7 @@ bool recount(solver* s){ //recount the literals in the clauses
 	int i;int j; clause* c;
 
 	for (i = 1; i < s->cap; i++) {
-		s->counts[i] = 0;
+		s->record[i] = 0;
 	}
 
 	for (i = 0; i < s->tail; i++) {
@@ -117,7 +150,7 @@ bool recount(solver* s){ //recount the literals in the clauses
 			if (s->valuation[c->lits[j]] == l_True) {
 				return false; 
 			} else if (s->valuation[c->lits[j]] == l_Undef) {
-				s->counts[c->lits[j]]++;
+				s->record[c->lits[j]]++;
 			}
 
 		}
@@ -135,8 +168,8 @@ lit choosev(solver * s) {//choose the most common literal according to the count
 	max = -1;
 	maxlit = -1;
 	for (i = 1; i < s->cap; i++) {
-		if (s->counts[i] > max) {
-			max = s->counts[i];
+		if (s->record[i] > max) {
+			max = s->record[i];
 			maxlit = i;
 		}
 	}
@@ -148,47 +181,47 @@ lit choosev(solver * s) {//choose the most common literal according to the count
 
 }
 
-lit back(solver * s) {
+lit back(solver * s,memory* memo) {
 	int i;
 	clause* c;
 
 	for (i = 1; i < s->cap; i++) { //reset the literals
-		if (s->level_v[i] == s->cur_level) {
+		if (memo->level_v[i] == memo->cur_level) {
 			s->valuation[i] = l_Undef;
 			s->valuation[lit_neg(i)] = l_Undef;
-			s->level_v[i] = -1;
+			memo->level_v[i] = -1;
 		}
 	}
 
 	for (i = s->tail; i < vecp_size(&s->clauses); i++) { //reset the clauses
 		c = vecp_begin(&s->clauses)[i];
-		if (c->mark == s->cur_level) {
+		if (c->mark == memo->cur_level) {
 			c->mark = -1;
 			s->tail++;
 		}
 		else break;
 	}
 
-	return s->v_level[s->cur_level--];  //return the literal in this level
+	return memo->v_level[memo->cur_level--];  //return the literal in this level
 
 }
 
 
-bool backtrack(solver * s, lit * decision) {
+bool backtrack(solver * s, lit * decision,memory* memo) {
 
-	if (s->cur_level == 0 && s->mark[lit_neg(s->v_level[0])] == true) {
+	if (memo->cur_level == 0 && memo->mark[lit_neg(memo->v_level[0])] == true) {
 		return false; 
 	}//come to the root and return flase
 
-	lit choice = back(s);
+	lit choice = back(s,memo);
 
-	while (s->mark[lit_neg(choice)] == true && s->mark[choice] == true) {
-		if (s->cur_level == -1) {
+	while (memo->mark[lit_neg(choice)] == true && memo->mark[choice] == true) {
+		if (memo->cur_level == -1) {
 			return false; 
 		}
-		s->mark[lit_neg(choice)] = false;  //reset the mark of choice
-		s->mark[choice] = false;
-		choice = back(s);
+		memo->mark[lit_neg(choice)] = false;  //reset the mark of choice
+		memo->mark[choice] = false;
+		choice = back(s,memo);
 	}
 	*decision = lit_neg(choice);
 
@@ -198,6 +231,7 @@ bool backtrack(solver * s, lit * decision) {
 bool solver_solve(solver * s) {
 	lit choice;
 	bool flag = false;
+	memory* memo = new_memory(s);
 
 	while (true) {
 
@@ -211,10 +245,10 @@ bool solver_solve(solver * s) {
 		
 
 		//propagate
-		if (!propagate(s, choice, true)) {
+		if (!propagate(s, choice, true,memo)) {
 
 			//backtrace
-			if (!backtrack(s, &choice)) {//backtrace to the root and return false 
+			if (!backtrack(s, &choice,memo)) {//backtrace to the root and return false 
 				return false; 
 			} else { // if backtrace is worked the choice will be changed. change to it's neg
 				flag = true;
@@ -225,9 +259,9 @@ bool solver_solve(solver * s) {
 			if (s->satisifable) { //judge if satisfied after propagating
 				return true; 
 			}
-			if (!unit_propagate(s)) {  //delete unit clauses
+			if (!unit_propagate(s,memo)) {  //delete unit clauses
 				//backtrace
-				if (!backtrack(s, &choice)) {//backtrace to the root and return false
+				if (!backtrack(s, &choice,memo)) {//backtrace to the root and return false
 					return false; 
 				} else {// if backtrace is worked the choice will be changed. change to it's neg
 					flag = true;
@@ -240,11 +274,13 @@ bool solver_solve(solver * s) {
 			}
 		}
 	}
+	destroy_memory(memo);
 	return true;
 }
 
 //***********************************************************************************************************************
 //debug
+/*
 void print_solver(solver* s) {
 	printf("size:%d\n", s->numofvar);
 	printf("cap:%d\n", s->cap);
@@ -258,7 +294,7 @@ void print_clause(clause* c) {
 	for (i = 0; i < c->size; i++) {
 		printf("%d ", lit_val(c->lits[i]));
 	}
-}
+}*/
 
 #endif
 
