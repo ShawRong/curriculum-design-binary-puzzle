@@ -4,8 +4,8 @@
 #include "extension.h"
 
 int main() {
-	
-	
+
+	/*
 	int op = 1; solver* s;
 	suduko* su;
 	char filename1[100];
@@ -39,7 +39,7 @@ int main() {
 			default:
 				break;
 		}
-	}
+	}*/
 	/*
 	lit l; int v; int* array;
 	l = additional_bool(new_addition(1, 15, 16, -1, -1), 16);
